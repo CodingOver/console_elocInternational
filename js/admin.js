@@ -15,6 +15,7 @@ let students = [];
 let editingStudentId = null;
 let editingSessionId = null;
 let currentOpenTeacherId = null;
+let editingSessionTeacherId = null;
 
 // ------------------------
 // ADMIN LOGIN
@@ -231,24 +232,24 @@ window.saveTeacher = saveTeacher;
 async function saveSession() {
     const title = document.getElementById("session-name").value;
     const url = document.getElementById("url").value;
-    const teacherId = document.getElementById("teacher-session").value;
-    const newType = document.getElementById("type").value; // new type from form
+    const newTeacherId = document.getElementById("teacher-session").value;
+    const newType = document.getElementById("type").value; // session type from form
     const level = document.getElementById("session-level").value;
     const selectedStudents = Array.from(document.querySelectorAll('#student-checkboxes input[name="students"]:checked')).map(el => {
         const student = students.find(s => s.id === el.value);
         return student ? { id: student.id, name: student.name } : null;
-    }).filter(s => s);    
+    }).filter(s => s);
     
     const selectedDays = Array.from(document.querySelectorAll('#checkbox-days input[name="sessionDays"]:checked')).map(el => el.value);
     const startTime = document.getElementById("session-start-time").value;
     const endTime = document.getElementById("session-end-time").value;
 
-    if (!title || !url || !teacherId || !newType || !level || selectedDays.length === 0 || !startTime || !endTime) {
+    if (!title || !url || !newTeacherId || !newType || !level || selectedDays.length === 0 || !startTime || !endTime) {
         alert("Please fill in all required fields in the session form.");
         return;
     }
     
-    // Prepare the new session data from the form.
+    // Prepare the new session data.
     let sessionData = {
         title,
         url,
@@ -257,77 +258,107 @@ async function saveSession() {
         startTime,
         endTime,
         type: newType, 
-        // Store each selected student as an object
         students: selectedStudents,
         participantsCount: newType === "group" ? 12 : 1
     };
     
-    
-
-    const teacherDocRef = doc(db, "teachers", teacherId);
-
     try {
         if (editingSessionId) {
-            // Set the session id to the one being edited.
+            // We're editing an existing session.
             sessionData.id = editingSessionId;
-            const teacherDocSnap = await getDoc(teacherDocRef);
-            if (!teacherDocSnap.exists()) {
-                alert("Teacher document not found.");
-                return;
-            }
-            let teacherData = teacherDocSnap.data();
 
-            // Determine in which array the session currently exists.
-            let oldType = null;
-            let oldIndex = -1;
-            if (teacherData.sessions && Array.isArray(teacherData.sessions.group)) {
-                oldIndex = teacherData.sessions.group.findIndex(s => s.id === editingSessionId);
-                if (oldIndex > -1) {
-                    oldType = "group";
+            // Check if the teacher assignment has changed.
+            if (editingSessionTeacherId && editingSessionTeacherId !== newTeacherId) {
+                // Remove the session from the original teacher's document.
+                let originalTeacherDocRef = doc(db, "teachers", editingSessionTeacherId);
+                let originalTeacherSnap = await getDoc(originalTeacherDocRef);
+                if (originalTeacherSnap.exists()) {
+                    let originalTeacherData = originalTeacherSnap.data();
+                    let oldType = null;
+                    if (originalTeacherData.sessions && Array.isArray(originalTeacherData.sessions.group) &&
+                        originalTeacherData.sessions.group.some(s => s.id === editingSessionId)) {
+                        oldType = "group";
+                    }
+                    if (!oldType && originalTeacherData.sessions && Array.isArray(originalTeacherData.sessions.individual) &&
+                        originalTeacherData.sessions.individual.some(s => s.id === editingSessionId)) {
+                        oldType = "individual";
+                    }
+                    if (oldType) {
+                        originalTeacherData.sessions[oldType] = originalTeacherData.sessions[oldType].filter(s => s.id !== editingSessionId);
+                        await updateDoc(originalTeacherDocRef, {
+                            ["sessions." + oldType]: originalTeacherData.sessions[oldType]
+                        });
+                    }
                 }
-            }
-            if (oldType === null && teacherData.sessions && Array.isArray(teacherData.sessions.individual)) {
-                oldIndex = teacherData.sessions.individual.findIndex(s => s.id === editingSessionId);
-                if (oldIndex > -1) {
-                    oldType = "individual";
+
+                // Now, add the session to the new teacher's document.
+                let newTeacherDocRef = doc(db, "teachers", newTeacherId);
+                let newTeacherSnap = await getDoc(newTeacherDocRef);
+                if (!newTeacherSnap.exists()) {
+                    alert("New teacher document not found.");
+                    return;
                 }
-            }
-            
-            if (oldType === null) {
-                alert("Session not found in teacher document.");
-                return;
-            }
-            
-            // If the session type has changed, remove it from the old array and push it into the new one.
-            if (oldType !== newType) {
-                // Remove from the old type array.
-                teacherData.sessions[oldType] = teacherData.sessions[oldType].filter(s => s.id !== editingSessionId);
-                
-                // Ensure the new type array exists.
-                if (!teacherData.sessions[newType]) {
-                    teacherData.sessions[newType] = [];
+                let newTeacherData = newTeacherSnap.data();
+                if (!newTeacherData.sessions) {
+                    newTeacherData.sessions = { group: [], individual: [] };
                 }
-                teacherData.sessions[newType].push(sessionData);
+                if (!newTeacherData.sessions[newType]) {
+                    newTeacherData.sessions[newType] = [];
+                }
+                newTeacherData.sessions[newType].push(sessionData);
+                await updateDoc(newTeacherDocRef, {
+                    ["sessions." + newType]: newTeacherData.sessions[newType]
+                });
             } else {
-                // If the type hasn't changed, just update the session in place.
-                teacherData.sessions[oldType][oldIndex] = sessionData;
+                // Teacher assignment did not change—update within the same document.
+                const teacherDocRef = doc(db, "teachers", newTeacherId);
+                const teacherDocSnap = await getDoc(teacherDocRef);
+                if (!teacherDocSnap.exists()) {
+                    alert("Teacher document not found.");
+                    return;
+                }
+                let teacherData = teacherDocSnap.data();
+                let oldType = null;
+                let oldIndex = -1;
+                if (teacherData.sessions && Array.isArray(teacherData.sessions.group)) {
+                    oldIndex = teacherData.sessions.group.findIndex(s => s.id === editingSessionId);
+                    if (oldIndex > -1) oldType = "group";
+                }
+                if (oldType === null && teacherData.sessions && Array.isArray(teacherData.sessions.individual)) {
+                    oldIndex = teacherData.sessions.individual.findIndex(s => s.id === editingSessionId);
+                    if (oldIndex > -1) oldType = "individual";
+                }
+                if (oldType === null) {
+                    alert("Session not found in teacher document.");
+                    return;
+                }
+
+                if (oldType !== newType) {
+                    teacherData.sessions[oldType] = teacherData.sessions[oldType].filter(s => s.id !== editingSessionId);
+                    if (!teacherData.sessions[newType]) {
+                        teacherData.sessions[newType] = [];
+                    }
+                    teacherData.sessions[newType].push(sessionData);
+                } else {
+                    teacherData.sessions[oldType][oldIndex] = sessionData;
+                }
+
+                let updateData = {};
+                updateData["sessions.group"] = teacherData.sessions.group || [];
+                updateData["sessions.individual"] = teacherData.sessions.individual || [];
+                await updateDoc(teacherDocRef, updateData);
             }
-            
-            // Prepare the update object for both session arrays if needed.
-            let updateData = {};
-            updateData["sessions.group"] = teacherData.sessions.group || [];
-            updateData["sessions.individual"] = teacherData.sessions.individual || [];
-            
-            await updateDoc(teacherDocRef, updateData);
-            
-            // Clear the editing flag and reset the form header/button.
+
+            // Clear the editing flags and reset the form.
             editingSessionId = null;
+            editingSessionTeacherId = null;
             document.querySelector("#session-drawer .drawer-header h3").textContent = "New Session";
             document.querySelector("#session-drawer .btn-primary").textContent = "Submit";
-            console.log("Session updated successfully and moved to", newType, "array if needed.");
+            console.log("Session updated successfully.");
         } else {
-            // New session: generate a new session id and use arrayUnion.
+            // Handle new session creation as before.
             sessionData.id = Date.now().toString();
+            const teacherDocRef = doc(db, "teachers", newTeacherId);
             if (newType === "group") {
                 await updateDoc(teacherDocRef, {
                     "sessions.group": arrayUnion(sessionData)
@@ -346,6 +377,7 @@ async function saveSession() {
         alert("Error saving session: " + error.message);
     }
 }
+
 
 
 window.saveSession = saveSession;
@@ -517,7 +549,7 @@ teachers.forEach(teacher => {
     const dateObj = new Date(teacher.dob);
     const day = dateObj.getDate();
     const month = monthNames[dateObj.getMonth()];
-    const avatarSrc = teacher.gender === "male" ? "../img/avatar_boys.png" : "../img/avatar_girl.png";
+    const avatarSrc = teacher.gender === "male" ? "https://codingover.github.io/console_elocInternational/img/Avatar_boys.png" : "https://codingover.github.io/console_elocInternational/img/Avatar_girl.png";
     const teacherDiv = document.createElement("div");
     teacherDiv.className = "teacher-details";
     teacherDiv.style.position = "relative";
@@ -660,18 +692,19 @@ window.closeCurrentTeacherSessionDrawer = closeCurrentTeacherSessionDrawer;
 function editSessionById(teacherId, sessionId) {
     const teacher = teachers.find(t => t.id == teacherId);
     if (!teacher) {
-    alert("Teacher not found.");
-    return;
+        alert("Teacher not found.");
+        return;
     }
     // Look for the session in both arrays
     let session = teacher.sessions.group.find(s => s.id === sessionId) ||
-                teacher.sessions.individual.find(s => s.id === sessionId);
+                  teacher.sessions.individual.find(s => s.id === sessionId);
     if (!session) {
-    alert("Session not found.");
-    return;
+        alert("Session not found.");
+        return;
     }
-    // Set edit mode flag
+    // Set edit mode flag and store the original teacher id.
     editingSessionId = session.id;
+    editingSessionTeacherId = teacherId;
     
     // Prepopulate form fields
     document.getElementById("session-name").value = session.title;
@@ -685,13 +718,13 @@ function editSessionById(teacherId, sessionId) {
     // Pre-check the day checkboxes
     const dayCheckboxes = document.querySelectorAll("#checkbox-days input[name='sessionDays']");
     dayCheckboxes.forEach(cb => {
-    cb.checked = session.days.includes(cb.value);
+        cb.checked = session.days.includes(cb.value);
     });
     
-    // Pre-check the student checkboxes
+    // Pre-check the student checkboxes (ensure you adjust this if needed)
     const studentCheckboxes = document.querySelectorAll("#student-checkboxes input[name='students']");
     studentCheckboxes.forEach(cb => {
-    cb.checked = session.students.includes(cb.value);
+        cb.checked = session.students.includes(cb.value);
     });
     
     // Update header and button text for edit mode
