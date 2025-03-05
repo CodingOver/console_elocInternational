@@ -4,6 +4,8 @@ import {signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.
 // ------------------------
 // DOMContentLoaded: Check Login and Fetch Teacher Data
 // ------------------------
+let students = [];
+
 document.addEventListener("DOMContentLoaded", function(){
 const teacherId = sessionStorage.getItem("teacherId");
 if (!teacherId) {
@@ -115,12 +117,11 @@ function createSessionBoxHTML(session) {
         <div class="session-header">
             <div class="session-time">${session.startTime} - ${session.endTime}</div>
             <button class="session-menu-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" 
-                    viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" 
-                    stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="1"></circle>
-                <circle cx="12" cy="5" r="1"></circle>
-                <circle cx="12" cy="19" r="1"></circle>
+                <!-- Edit button or similar -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="12" cy="5" r="1"></circle>
+                    <circle cx="12" cy="19" r="1"></circle>
                 </svg>
             </button>
         </div>
@@ -130,8 +131,8 @@ function createSessionBoxHTML(session) {
             <div class="session-days">${session.days.join(' - ')}</div>
             <div class="session-students">
                 ${session.students && session.students.length 
-                ? session.students.map(name => `<span class="student-badge">${name}</span>`).join('') 
-                : `<span class="no-students">No students assigned</span>`
+                    ? session.students.map(studentObj => `<span class="student-badge">${getUpdatedStudentName(studentObj)}</span>`).join('') 
+                    : `<span class="no-students">No students assigned</span>`
                 }
             </div>
         </div>
@@ -141,6 +142,7 @@ function createSessionBoxHTML(session) {
     </div>
     `;
 }
+
 
 // ------------------------
 // Update Teacher Dashboard Stats
@@ -164,4 +166,12 @@ if (session.students && Array.isArray(session.students)) {
 }
 });
 document.getElementById("totalStudentssOfTheTeacher").innerText = studentSet.size;
+}
+
+
+// Helper function to get updated student name
+function getUpdatedStudentName(studentObj) {
+    // Look up the student using their id from the global students array
+    const updatedStudent = students.find(s => s.id === studentObj.id);
+    return updatedStudent ? updatedStudent.name : studentObj.name;
 }

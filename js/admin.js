@@ -234,10 +234,10 @@ async function saveSession() {
     const teacherId = document.getElementById("teacher-session").value;
     const newType = document.getElementById("type").value; // new type from form
     const level = document.getElementById("session-level").value;
-    const selectedStudentNames = Array.from(document.querySelectorAll('#student-checkboxes input[name="students"]:checked')).map(el => {
+    const selectedStudents = Array.from(document.querySelectorAll('#student-checkboxes input[name="students"]:checked')).map(el => {
         const student = students.find(s => s.id === el.value);
-        return student ? student.name : '';
-    }).filter(name => name);
+        return student ? { id: student.id, name: student.name } : null;
+    }).filter(s => s);    
     
     const selectedDays = Array.from(document.querySelectorAll('#checkbox-days input[name="sessionDays"]:checked')).map(el => el.value);
     const startTime = document.getElementById("session-start-time").value;
@@ -256,10 +256,12 @@ async function saveSession() {
         days: selectedDays,
         startTime,
         endTime,
-        type: newType, // session type from the form
-        students: selectedStudentNames,  // now storing names
+        type: newType, 
+        // Store each selected student as an object
+        students: selectedStudents,
         participantsCount: newType === "group" ? 12 : 1
     };
+    
     
 
     const teacherDocRef = doc(db, "teachers", teacherId);
@@ -351,6 +353,13 @@ window.saveSession = saveSession;
 // ------------------------
 // SAVE STUDENT FUNCTION (Firestore version)
 // ------------------------
+// Helper function to get updated student name
+function getUpdatedStudentName(studentObj) {
+    // Look up the student using their id from the global students array
+    const updatedStudent = students.find(s => s.id === studentObj.id);
+    return updatedStudent ? updatedStudent.name : studentObj.name;
+}
+
 async function saveStudent() {
     const name = document.getElementById("student-name").value;
     const dob = document.getElementById("st-dob").value;
@@ -367,19 +376,17 @@ async function saveStudent() {
 
     try {
         if (editingStudentId) {
-            // Edit mode: update the existing student document.
+            // Update existing student
             const studentDocRef = doc(db, "students", editingStudentId);
             await updateDoc(studentDocRef, studentData);
-            // Update the local array by finding and replacing the student data.
             const index = students.findIndex(s => s.id === editingStudentId);
             if (index > -1) {
                 students[index] = { ...students[index], ...studentData };
             }
-            // Reset editing mode.
             editingStudentId = null;
             document.querySelector('#student-drawer .btn-primary').textContent = "Submit";
         } else {
-            // New student mode: add a new student.
+            // New student mode
             const docRef = await addDoc(collection(db, "students"), studentData);
             const newStudent = { ...studentData, id: docRef.id };
             students.push(newStudent);
@@ -387,6 +394,8 @@ async function saveStudent() {
         renderStudentTable();
         renderStudentCheckboxes();
         updateDashboardCards();
+        // Trigger a re-render of session cards to reflect updated student names
+        renderTeacherSection();
         closeStudentDrawer();
     } catch (error) {
         console.error("Error saving student:", error);
@@ -555,7 +564,6 @@ teacher.sessions?.individual?.forEach(session => {
 }
 
 function createSessionBoxHTML(session, teacherId) {
-    // Set colors based on session type
     let backgroundColor = session.type === "group" ? "#fee4cb" : "#c8f7dc";
     
     return `
@@ -572,18 +580,18 @@ function createSessionBoxHTML(session, teacherId) {
                 <div class="session-days">${session.days.join(' - ')}</div>
                 <div class="session-students">
                     ${session.students && session.students.length 
-                        ? session.students.map(name => `<span class="student-badge">${name}</span>`).join('') 
+                        ? session.students.map(studentObj => `<span class="student-badge">${getUpdatedStudentName(studentObj)}</span>`).join('') 
                         : `<span class="no-students">No students assigned</span>`
                     }
                 </div>
             </div>
             <div class="session-footer">
                 <a href="${session.url}" target="_blank" class="join-btn">Join Session</a>
-                <!-- Session actions (copy/share) can be updated or removed if no longer needed -->
             </div>
         </div>
     `;
 }
+
 
 
 
