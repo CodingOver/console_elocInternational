@@ -108,40 +108,38 @@ teacher.sessions.individual.forEach(session => {
 // Create Session Card HTML
 // ------------------------
 function createSessionBoxHTML(session) {
-// Set background and accent colors based on session type
-let backgroundColor = session.type === "group" ? "#fbfbfb" : "#ffffff";
-let accentColor = session.type === "group" ? "#ff942e" : "#00b14d";
-
-return `
-<div class="session-card" style="background: ${backgroundColor};">
-    <div class="session-header">
-    <div class="session-time">${session.startTime} - ${session.endTime}</div>
-    <button class="session-menu-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" 
-            viewBox="0 0 24 24" fill="none" stroke="${accentColor}" stroke-width="2" 
-            stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="1"></circle>
-        <circle cx="12" cy="5" r="1"></circle>
-        <circle cx="12" cy="19" r="1"></circle>
-        </svg>
-    </button>
+    let backgroundColor = session.type === "group" ? "#fbfbfb" : "#ffffff";
+    
+    return `
+    <div class="session-card" style="background: ${backgroundColor};">
+        <div class="session-header">
+            <div class="session-time">${session.startTime} - ${session.endTime}</div>
+            <button class="session-menu-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" 
+                    viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" 
+                    stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="1"></circle>
+                <circle cx="12" cy="5" r="1"></circle>
+                <circle cx="12" cy="19" r="1"></circle>
+                </svg>
+            </button>
+        </div>
+        <div class="session-body">
+            <h3 class="session-title">${session.title}</h3>
+            <p class="session-level">${session.level}</p>
+            <div class="session-days">${session.days.join(' - ')}</div>
+            <div class="session-students">
+                ${session.students && session.students.length 
+                ? session.students.map(name => `<span class="student-badge">${name}</span>`).join('') 
+                : `<span class="no-students">No students assigned</span>`
+                }
+            </div>
+        </div>
+        <div class="session-footer">
+            <a href="${session.url}" target="_blank" class="join-btn">Join Session</a>
+        </div>
     </div>
-    <div class="session-body">
-    <h3 class="session-title">${session.title}</h3>
-    <p class="session-level">${session.level}</p>
-    <div class="session-days">${session.days.join(' - ')}</div>
-    <div class="session-students">
-        ${session.students && session.students.length 
-        ? session.students.map(student => `<span class="student-badge">${student}</span>`).join('') 
-        : `<span class="no-students">No students assigned</span>`
-        }
-    </div>
-    </div>
-    <div class="session-footer">
-    <a href="${session.url}" target="_blank" class="join-btn">Join Session</a>
-    </div>
-</div>
-`;
+    `;
 }
 
 // ------------------------

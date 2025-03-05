@@ -234,7 +234,11 @@ async function saveSession() {
     const teacherId = document.getElementById("teacher-session").value;
     const newType = document.getElementById("type").value; // new type from form
     const level = document.getElementById("session-level").value;
-    const selectedStudentIds = Array.from(document.querySelectorAll('#student-checkboxes input[name="students"]:checked')).map(el => el.value);
+    const selectedStudentNames = Array.from(document.querySelectorAll('#student-checkboxes input[name="students"]:checked')).map(el => {
+        const student = students.find(s => s.id === el.value);
+        return student ? student.name : '';
+    }).filter(name => name);
+    
     const selectedDays = Array.from(document.querySelectorAll('#checkbox-days input[name="sessionDays"]:checked')).map(el => el.value);
     const startTime = document.getElementById("session-start-time").value;
     const endTime = document.getElementById("session-end-time").value;
@@ -252,10 +256,11 @@ async function saveSession() {
         days: selectedDays,
         startTime,
         endTime,
-        type: newType, // this is the new type
-        students: selectedStudentIds,
+        type: newType, // session type from the form
+        students: selectedStudentNames,  // now storing names
         participantsCount: newType === "group" ? 12 : 1
     };
+    
 
     const teacherDocRef = doc(db, "teachers", teacherId);
 
@@ -552,10 +557,6 @@ teacher.sessions?.individual?.forEach(session => {
 function createSessionBoxHTML(session, teacherId) {
     // Set colors based on session type
     let backgroundColor = session.type === "group" ? "#fee4cb" : "#c8f7dc";
-    let accentColor = session.type === "group" ? "#ff942e" : "#00b14d";
-    
-    // Assuming session.students is an array of student IDs now
-    const studentIdsStr = session.students && session.students.length ? session.students.join(",") : "";
     
     return `
         <div class="session-card" style="background: ${backgroundColor};">
@@ -571,30 +572,18 @@ function createSessionBoxHTML(session, teacherId) {
                 <div class="session-days">${session.days.join(' - ')}</div>
                 <div class="session-students">
                     ${session.students && session.students.length 
-                        ? session.students.map(id => {
-                            // Look up the student's name from the global students array
-                            const student = students.find(s => s.id === id);
-                            return student ? `<span class="student-badge">${student.name}</span>` : "";
-                        }).join('') 
+                        ? session.students.map(name => `<span class="student-badge">${name}</span>`).join('') 
                         : `<span class="no-students">No students assigned</span>`
                     }
                 </div>
             </div>
             <div class="session-footer">
                 <a href="${session.url}" target="_blank" class="join-btn">Join Session</a>
-                <div class="session-actions">
-                    <button class="action-btn copy-btn" onclick="copySessionLink('${session.url}')">
-                        <i class="material-icons">content_copy</i>
-                    </button>
-                    <button class="action-btn share-btn" onclick="shareSession('${session.url}', '${session.title}', ${session.participantsCount}, '${session.type}', '${studentIdsStr}')">
-                        <i class="material-icons">share</i>
-                    </button>
-                </div>
+                <!-- Session actions (copy/share) can be updated or removed if no longer needed -->
             </div>
         </div>
     `;
 }
-
 
 
 
