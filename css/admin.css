@@ -741,6 +741,20 @@ font-weight: bold;
 .join-btn:hover {
     background: #333;
 }
+.session-footer .action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    margin-left: 8px;
+    font-size: 20px;
+    color: var(--main-color, #1f1c2e);
+    transition: color 0.3s ease;
+}
+
+.session-footer .action-btn:hover {
+    color: var(--secondary-color, #555);
+}
+
 .session-actions {
     display: flex;
     gap: 10px;

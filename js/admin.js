@@ -565,7 +565,11 @@ teacher.sessions?.individual?.forEach(session => {
 
 function createSessionBoxHTML(session, teacherId) {
     let backgroundColor = session.type === "group" ? "#fee4cb" : "#c8f7dc";
-    
+    // Prepare a comma-separated list of student IDs (if available)
+    let studentIdsStr = session.students && session.students.length
+        ? session.students.map(s => s.id).join(",")
+        : "";
+        
     return `
         <div class="session-card" style="background: ${backgroundColor};">
             <div class="session-header">
@@ -579,7 +583,8 @@ function createSessionBoxHTML(session, teacherId) {
                 <p class="session-level">${session.level}</p>
                 <div class="session-days">${session.days.join(' - ')}</div>
                 <div class="session-students">
-                    ${session.students && session.students.length 
+                    ${
+                        session.students && session.students.length 
                         ? session.students.map(studentObj => `<span class="student-badge">${getUpdatedStudentName(studentObj)}</span>`).join('') 
                         : `<span class="no-students">No students assigned</span>`
                     }
@@ -587,10 +592,19 @@ function createSessionBoxHTML(session, teacherId) {
             </div>
             <div class="session-footer">
                 <a href="${session.url}" target="_blank" class="join-btn">Join Session</a>
+                <div class="icons">
+                    <button class="action-btn copy-btn" title="Copy Session Link" onclick="copySessionLink('${session.url}')">
+                        <i class="material-icons">content_copy</i>
+                    </button>
+                    <button class="action-btn share-btn" title="Share Session" onclick="shareSession('${session.url}', '${session.title}', '${session.participantsCount}', '${session.type}', '${studentIdsStr}')">
+                        <i class="material-icons">share</i>
+                    </button>
+                </div>
             </div>
         </div>
     `;
 }
+
 
 
 
@@ -721,33 +735,38 @@ function shareSession(url, title, participantsCount, type, studentIdsStr) {
     let message = "";
     // Convert the comma-separated string into an array of student IDs
     let studentIds = studentIdsStr ? studentIdsStr.split(",") : [];
-    // Look up phone numbers from the global 'students' array using the student id
-    let phoneNumbers = [];
+    // Dynamically calculate the actual participant count
+    let actualParticipantsCount = studentIds.length;
+
+    // Look up Student's Name from the global 'students' array using the student id
+    let names = [];
     studentIds.forEach(id => {
         let student = students.find(s => s.id === id);
-        if (student && student.phone) {
-            phoneNumbers.push(student.phone);
+        if (student && student.name) {
+            names.push(student.name);
         }
     });
     
     if (type === "individual") {
-        // For one-on-one sessions, use the first available phone number
-        if (phoneNumbers.length > 0) {
+        // For individual sessions, simply share the session link
+        if (names) {
             message = `Join my session "${title}". Here's the link: ${url}`;
-            // Use the wa.me format (ensure phone is in international format without a plus sign)
-            const whatsappURL = `https://wa.me/${phoneNumbers[0]}?text=${encodeURIComponent(message)}`;
+            // Open WhatsApp with the prepopulated message using wa.me format
+            const whatsappURL = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
             window.open(whatsappURL, '_blank');
         } else {
-            alert("No student phone number available for this individual session.");
+            alert("No student available for this session.");
         }
     } else if (type === "group") {
-        if (phoneNumbers.length > 0) {
-            message = `Join our group session "${title}" with ${participantsCount} participants.\nContacts: ${phoneNumbers.join(", ")}\nSession link: ${url}`;
+
+        // For group sessions, include the participant name & count in the message
+        if (names.length) {
+            message = `Join our group session "${title}" with ${actualParticipantsCount} participants.\nContacts: ${names.join(", ")}\nSession link: ${url}`;
             // Open WhatsApp with prepopulated text
             const whatsappURL = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
             window.open(whatsappURL, '_blank');
         } else {
-            alert("No student phone numbers available for this group session.");
+            alert("No student available for this group session.");
         }
     } else {
         alert("Unknown session type.");
