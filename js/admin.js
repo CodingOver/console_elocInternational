@@ -448,24 +448,38 @@ window.saveStudent = saveStudent;
 // RENDERING FUNCTIONS & DASHBOARD UPDATES
 // (These functions remain similar; they now use the global arrays that were filled by Firestore.)
 // ------------------------
-function renderStudentTable() {
-const tbody = document.querySelector("#student-table tbody");
-tbody.innerHTML = "";
-students.forEach(student => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-    <td>${student.name}</td>
-    <td>${student.dob}</td>
-    <td>${student.level}</td>
-    <td>${student.phone}</td>
-    <td>
-        <button class="action-btn edit-btn" onclick="editStudent('${student.id}')">Edit</button>
-        <button class="action-btn delete-btn" onclick="deleteStudent('${student.id}')">Delete</button>
-    </td>
-    `;
-    tbody.appendChild(tr);
-});
+// Updated renderStudentTable function with an optional filter
+function renderStudentTable(filterText = "") {
+    const tbody = document.querySelector("#student-table tbody");
+    tbody.innerHTML = "";
+    
+    // Filter the students based on the search text (case-insensitive)
+    const filteredStudents = students.filter(student =>
+        student.name.toLowerCase().includes(filterText.toLowerCase())
+    );
+
+    filteredStudents.forEach(student => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${student.name}</td>
+            <td>${student.dob}</td>
+            <td>${student.level}</td>
+            <td>${student.phone}</td>
+            <td>
+                <button class="action-btn edit-btn" onclick="editStudent('${student.id}')">Edit</button>
+                <button class="action-btn delete-btn" onclick="deleteStudent('${student.id}')">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
+
+// Attach event listener to the search input for filtering
+document.getElementById("student-table-search").addEventListener("keyup", function() {
+    const searchValue = this.value;
+    renderStudentTable(searchValue);
+});
+
 
 // Student Checkboxes
 function renderStudentCheckboxes() {
