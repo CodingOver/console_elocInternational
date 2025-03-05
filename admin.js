@@ -353,42 +353,84 @@ async function saveStudent() {
     const phone = document.getElementById("student-phone").value;
 
     if (!name || !dob || !level || !phone) {
-        alert("Please fill in all fields.");
-        return;
+    alert("Please fill in all fields.");
+    return;
     }
 
-    // Build the student data object.
+    // Build the student data object
     const studentData = { name, dob, level, phone };
 
-    try {
-        if (editingStudentId) {
-            // Edit mode: update the existing student document.
-            const studentDocRef = doc(db, "students", editingStudentId);
-            await updateDoc(studentDocRef, studentData);
-            // Update the local array by finding and replacing the student data.
-            const index = students.findIndex(s => s.id === editingStudentId);
-            if (index > -1) {
-                students[index] = { ...students[index], ...studentData };
-            }
-            // Reset editing mode.
-            editingStudentId = null;
-            document.querySelector('#student-drawer .btn-primary').textContent = "Submit";
-        } else {
-            // New student mode: add a new student.
-            const docRef = await addDoc(collection(db, "students"), studentData);
-            const newStudent = { ...studentData, id: docRef.id };
-            students.push(newStudent);
+    if (editingSessionId) {
+        // Ensure we keep the original id.
+        sessionData.id = editingSessionId;
+        
+        // Fetch the teacher document.
+        const teacherDocSnap = await getDoc(teacherDocRef);
+        if (!teacherDocSnap.exists()) {
+        alert("Teacher document not found.");
+        return;
         }
+        const teacherData = teacherDocSnap.data();
+        console.log("Teacher Data:", teacherData);
+        
+        // Check both sessions arrays for the session.
+        let sessionFound = false;
+        let sessionTypeFound = "";
+        
+        // Try to update in group sessions.
+        if (teacherData.sessions && Array.isArray(teacherData.sessions.group)) {
+        const index = teacherData.sessions.group.findIndex(s => s.id === editingSessionId);
+        if (index > -1) {
+            teacherData.sessions.group[index] = sessionData;
+            sessionFound = true;
+            sessionTypeFound = "group";
+        }
+        }
+        
+        // If not found, try individual sessions.
+        if (!sessionFound && teacherData.sessions && Array.isArray(teacherData.sessions.individual)) {
+        const index = teacherData.sessions.individual.findIndex(s => s.id === editingSessionId);
+        if (index > -1) {
+            teacherData.sessions.individual[index] = sessionData;
+            sessionFound = true;
+            sessionTypeFound = "individual";
+        }
+        }
+        
+        if (!sessionFound) {
+        console.error("Session with id", editingSessionId, "not found in teacher document.");
+        alert("Session not found in teacher document.");
+        return;
+        }
+        
+        // Write back the updated array.
+        let updateData = {};
+        updateData[`sessions.${sessionTypeFound}`] = teacherData.sessions[sessionTypeFound];
+        console.log("Updating teacher document with:", updateData);
+        
+        await updateDoc(teacherDocRef, updateData);
+        
+        // Clear editing mode.
+        editingSessionId = null;
+        document.querySelector("#session-drawer .drawer-header h3").textContent = "New Session";
+        document.querySelector("#session-drawer .btn-primary").textContent = "Submit";
+        console.log("Session updated successfully in", sessionTypeFound, "array.");
+    } else {
+    // Add a new student
+    try {
+        const docRef = await addDoc(collection(db, "students"), studentData);
+        const newStudent = { ...studentData, id: docRef.id };
+        students.push(newStudent);
         renderStudentTable();
         renderStudentCheckboxes();
         updateDashboardCards();
         closeStudentDrawer();
     } catch (error) {
-        console.error("Error saving student:", error);
-        alert("Error saving student: " + error.message);
+        console.error("Error adding student:", error);
+        alert("Error adding student: " + error.message);
     }
-}
-
+    }
+}  
 
 function editStudent(id) {
     // Find the student in the local array
