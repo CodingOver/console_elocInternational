@@ -5,6 +5,8 @@ import { arrayUnion } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-f
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc ,query, where} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 import { db, auth } from "./firebase.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
+
 // Ensure that auth and db are imported from your firebase.js
 
 

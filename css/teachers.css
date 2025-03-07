@@ -1216,3 +1216,25 @@ button, a {
   align-items: center;
   gap: 5px;
 }
+
+.lesson-card {
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  transition: box-shadow 0.3s ease;
+}
+.lesson-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.lesson-card h4 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #333;
+}
+.lesson-card a {
+  text-decoration: none;
+  color: #2575fc;
+  font-weight: 500;
+}

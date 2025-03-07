@@ -3,7 +3,9 @@ import { db, auth } from "./firebase.js";
 import { doc, getDoc, setDoc} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 import {signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 // Add these imports:
-import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { collection, query, where, getDocs, addDoc} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
+
 
 // ------------------------
 // DOMContentLoaded: Check Login and Fetch Teacher Data
@@ -120,8 +122,7 @@ function createSessionBoxHTML(session) {
     <div class="session-card" style="background: ${backgroundColor};">
         <div class="session-header">
         <div class="session-time">${session.startTime} - ${session.endTime}</div>
-        <!-- Existing Add Lesson button remains -->
-        <button class="session-menu-btn" onclick="openLessonDrawer()">
+        <button class="session-menu-btn" onclick="openLessonDrawer('${session.id}')">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -185,10 +186,13 @@ function getUpdatedStudentName(studentObj) {
 }
 
 // Add New Lesson Drawer Drawer
-function openLessonDrawer() {
+function openLessonDrawer(sessionId) {
+    // Store the current session ID globally
+    window.currentSessionId = sessionId;
     document.getElementById("lesson-drawer").classList.add("open");
     document.getElementById("lesson-overlay").style.display = "block";
 }
+
 
 function closeLessonDrawer() {
     document.getElementById("lesson-drawer").classList.remove("open");
@@ -199,19 +203,76 @@ function closeLessonDrawer() {
     document.getElementById("file-name").textContent = "";
 }
 
-function submitLesson() {
-    const lessonName = document.getElementById("lesson-name").value.trim();
-    const lessonFile = document.getElementById("lesson-upload").files[0];
+async function updateLessonList(sessionId) {
+    // Check if the teacher's lesson list drawer is present and visible
+    const drawer = document.getElementById("teacher-lesson-list-drawer");
+    if (!drawer) return;
+    
+    // Optionally, check if the drawer is open (for example, by a class or style)
+    if (drawer.style.right === "0px" || drawer.classList.contains("open")) {
+    try {
+        const lessons = await fetchLessonsForSession(sessionId);
+        const lessonListBody = document.getElementById("teacher-lesson-list-body");
+        if (lessons.length > 0) {
+        lessonListBody.innerHTML = lessons.map(lesson => `
+            <div class="lesson-card">
+            <h4>${lesson.lessonName}</h4>
+            ${lesson.fileUrl ? `<a href="${lesson.fileUrl}" target="_blank">View File</a>` : ''}
+            </div>
+        `).join("");
+        } else {
+        lessonListBody.innerHTML = "<p>No lessons added yet.</p>";
+        }
+    } catch (error) {
+        console.error("Error updating lesson list:", error);
+    }
+    }
+}
 
-    if (!lessonName || !lessonFile) {
+
+// Submit The Lesson
+async function submitLesson() {
+const lessonName = document.getElementById("lesson-name").value.trim();
+const lessonFile = document.getElementById("lesson-upload").files[0];
+
+if (!lessonName || !lessonFile) {
     alert("Please provide a lesson name and upload a file.");
     return;
-    }
-    
-    // TODO: Implement file upload and lesson submission logic.
+}
+
+// In a real implementation, you’d upload the file (e.g., to Firebase Storage) and get its URL.
+// For now, we simulate with a placeholder:
+const fileUrl = "https://via.placeholder.com/150";
+
+// Get the current teacher and session IDs
+const teacherId = sessionStorage.getItem("teacherId");
+if (!window.currentSessionId) {
+    alert("No session selected for adding the lesson.");
+    return;
+}
+
+// Build the lesson object
+const lessonData = {
+    lessonName: lessonName,
+    fileUrl: fileUrl,
+    teacherId: teacherId,
+    sessionId: window.currentSessionId,
+    createdAt: new Date().toISOString()
+};
+
+try {
+    const docRef = await addDoc(collection(db, "lessons"), lessonData);
+    lessonData.id = docRef.id;
     alert(`Lesson "${lessonName}" submitted successfully!`);
     closeLessonDrawer();
+    // After saving, update the lesson list drawer (if it’s open) so the new lesson appears immediately.
+    updateLessonList(window.currentSessionId);
+    } catch (error) {
+    console.error("Error submitting lesson:", error);
+    alert("Error submitting lesson: " + error.message);
+    }
 }
+
 
 // Update the file input display when a file is chosen.
 document.getElementById("lesson-upload").addEventListener("change", function(){
