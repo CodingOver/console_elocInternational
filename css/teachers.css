@@ -1156,3 +1156,63 @@ button, a {
   background: #2575fc;
   color: #fff;
 }
+
+
+/* Ensure the session footer uses flex layout to align its buttons */
+.session-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Style for the "View Lessons" button */
+.session-footer .lessons-btn {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.session-footer .lessons-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  transform: scale(1.1);
+}
+
+.session-footer .lessons-btn i.material-icons {
+  font-size: 24px;
+  color: #1f1c2e;
+}
+
+
+/* Style for the "View Lessons" button inside a session card */
+.session-card .icons .lessons-btn {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  margin-left: 5px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.session-card .icons .lessons-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  transform: scale(1.1);
+}
+
+.session-card .icons .lessons-btn i.material-icons {
+  font-size: 24px;
+  color: #1f1c2e;
+}
+
+/* Optionally, adjust spacing in the session-footer icons container */
+.session-card .icons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}

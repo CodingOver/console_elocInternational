@@ -3,7 +3,7 @@
 // ========================
 import { arrayUnion } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc ,query, where} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 import { db, auth } from "./firebase.js";
 // Ensure that auth and db are imported from your firebase.js
 
@@ -616,45 +616,48 @@ teacher.sessions?.individual?.forEach(session => {
 
 function createSessionBoxHTML(session, teacherId) {
     let backgroundColor = session.type === "group" ? "#fee4cb" : "#c8f7dc";
-    // Prepare a comma-separated list of student IDs (if available)
     let studentIdsStr = session.students && session.students.length
-        ? session.students.map(s => s.id).join(",")
-        : "";
-        
+    ? session.students.map(s => s.id).join(",")
+    : "";
     return `
-        <div class="session-card" style="background: ${backgroundColor};">
-            <div class="session-header">
-                <div class="session-time">${session.startTime} - ${session.endTime}</div>
-                <button class="session-menu-btn" onclick="editSessionById('${teacherId}', '${session.id}')">
-                    <i class="material-icons">edit</i>
-                </button>
-            </div>
-            <div class="session-body">
-                <h3 class="session-title">${session.title}</h3>
-                <p class="session-level">${session.level}</p>
-                <div class="session-days">${session.days.join(' - ')}</div>
-                <div class="session-students">
-                    ${
-                        session.students && session.students.length 
-                        ? session.students.map(studentObj => `<span class="student-badge">${getUpdatedStudentName(studentObj)}</span>`).join('') 
-                        : `<span class="no-students">No students assigned</span>`
-                    }
-                </div>
-            </div>
-            <div class="session-footer">
-                <a href="${session.url}" target="_blank" class="join-btn">Join Session</a>
-                <div class="icons">
-                    <button class="action-btn copy-btn" title="Copy Session Link" onclick="copySessionLink('${session.url}')">
-                        <i class="material-icons">content_copy</i>
-                    </button>
-                    <button class="action-btn share-btn" title="Share Session" onclick="shareSession('${session.url}', '${session.title}', '${session.participantsCount}', '${session.type}', '${studentIdsStr}')">
-                        <i class="material-icons">share</i>
-                    </button>
-                </div>
-            </div>
+    <div class="session-card" style="background: ${backgroundColor};">
+        <div class="session-header">
+        <div class="session-time">${session.startTime} - ${session.endTime}</div>
+        <button class="session-menu-btn" onclick="editSessionById('${teacherId}', '${session.id}')">
+            <i class="material-icons">edit</i>
+        </button>
         </div>
+        <div class="session-body">
+        <h3 class="session-title">${session.title}</h3>
+        <p class="session-level">${session.level}</p>
+        <div class="session-days">${session.days.join(' - ')}</div>
+        <div class="session-students">
+            ${
+            session.students && session.students.length 
+            ? session.students.map(studentObj => `<span class="student-badge">${getUpdatedStudentName(studentObj)}</span>`).join('') 
+            : `<span class="no-students">No students assigned</span>`
+            }
+        </div>
+        </div>
+        <div class="session-footer">
+        <a href="${session.url}" target="_blank" class="join-btn">Join Session</a>
+        <div class="icons">
+            <button class="action-btn copy-btn" title="Copy Session Link" onclick="copySessionLink('${session.url}')">
+            <i class="material-icons">content_copy</i>
+            </button>
+            <button class="action-btn share-btn" title="Share Session" onclick="shareSession('${session.url}', '${session.title}', '${session.participantsCount}', '${session.type}', '${studentIdsStr}')">
+            <i class="material-icons">share</i>
+            </button>
+            <!-- New "View Lessons" button -->
+            <button class="action-btn lessons-btn" title="View Lessons" onclick="openLessonListDrawerFromCard('${teacherId}', '${session.id}', '${session.title}')">
+            <i class="material-icons">menu_book</i>
+            </button>
+        </div>
+        </div>
+    </div>
     `;
 }
+
 
 
 
@@ -825,9 +828,123 @@ function shareSession(url, title, participantsCount, type, studentIdsStr) {
     }
 }
 
-
-
-
-
-
 window.shareSession = shareSession;
+
+// 2. Add functions to fetch lessons and manage the lesson list drawer
+
+// Fetch lessons from Firestore for a given session ID
+async function fetchLessonsForSession(sessionId) {
+    const lessonsQuery = query(
+    collection(db, "lessons"),
+    where("sessionId", "==", sessionId)
+    );
+    const querySnapshot = await getDocs(lessonsQuery);
+    const lessons = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return lessons;
+}
+// Create the lesson list drawer (if it doesn’t exist already)
+function createLessonListDrawer() {
+    let drawer = document.getElementById("lesson-list-drawer");
+    if (!drawer) {
+    drawer = document.createElement("div");
+    drawer.id = "lesson-list-drawer";
+    drawer.className = "lesson-list-drawer";
+    // Basic inline styles (adjust or move to admin.css as needed)
+    drawer.style.position = "fixed";
+    drawer.style.top = "0";
+    drawer.style.right = "-450px"; // hidden by default
+    drawer.style.width = "450px";
+    drawer.style.height = "100%";
+    drawer.style.background = "#fff";
+    drawer.style.boxShadow = "-4px 0 20px rgba(0,0,0,0.15)";
+    drawer.style.transition = "right 0.3s ease";
+    drawer.style.zIndex = "1100"; // Above the teacher-session drawer (which uses 1000)
+    drawer.style.display = "flex";
+    drawer.style.flexDirection = "column";
+    drawer.innerHTML = `
+        <div class="drawer-header">
+        <h3 id="lesson-list-title">Lessons</h3>
+        <button class="close-btn" onclick="closeLessonListDrawer()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        </div>
+        <div class="drawer-body" id="lesson-list-body" style="padding:20px; overflow-y:auto; flex:1;">
+        </div>
+        <div class="drawer-footer" style="padding:20px; text-align:right;">
+        <button class="btn cancel-btn" onclick="closeLessonListDrawer()">Close</button>
+        </div>
+    `;
+    document.body.appendChild(drawer);
+    }
+    return drawer;
+}
+
+// Create the overlay for the lesson list drawer
+function createLessonListOverlay() {
+    let overlay = document.getElementById("lesson-list-overlay");
+    if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "lesson-list-overlay";
+    overlay.style.position = "fixed";
+    overlay.style.top = "0";
+    overlay.style.left = "0";
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.background = "rgba(0,0,0,0.5)";
+    overlay.style.zIndex = "1050";
+    overlay.style.display = "none";
+    overlay.addEventListener("click", closeLessonListDrawer);
+    document.body.appendChild(overlay);
+    }
+    return overlay;
+}
+
+// Open the lesson list drawer for a given session (using its ID and title)
+async function openLessonListDrawer(sessionId, sessionTitle) {
+    const drawer = createLessonListDrawer();
+    const overlay = createLessonListOverlay();
+    document.getElementById("lesson-list-title").textContent = `Lessons for: ${sessionTitle}`;
+    // Fetch lessons for this session from Firestore
+    try {
+    const lessons = await fetchLessonsForSession(sessionId);
+    const lessonListBody = document.getElementById("lesson-list-body");
+    if (lessons.length > 0) {
+        lessonListBody.innerHTML = lessons.map(lesson => `
+        <div class="lesson-card" style="padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:5px;">
+            <h4 style="margin:0 0 5px 0;">${lesson.lessonName}</h4>
+            ${lesson.fileUrl ? `<a href="${lesson.fileUrl}" target="_blank">View File</a>` : ''}
+        </div>
+        `).join("");
+    } else {
+        lessonListBody.innerHTML = "<p>No lessons added yet.</p>";
+    }
+    } catch (error) {
+    console.error("Error fetching lessons:", error);
+    }
+    // Open the drawer and show the overlay
+    drawer.style.right = "0";
+    overlay.style.display = "block";
+}
+
+// Close the lesson list drawer and its overlay
+function closeLessonListDrawer() {
+    const drawer = document.getElementById("lesson-list-drawer");
+    const overlay = document.getElementById("lesson-list-overlay");
+    if (drawer) {
+    drawer.style.right = "-450px";
+    }
+    if (overlay) {
+    overlay.style.display = "none";
+    }
+}
+
+// Helper function to be called when clicking the "View Lessons" button on a session card
+function openLessonListDrawerFromCard(teacherId, sessionId, sessionTitle) {
+    // Optionally, you can add logic here if you need teacherId.
+    openLessonListDrawer(sessionId, sessionTitle);
+}
+window.openLessonListDrawerFromCard = openLessonListDrawerFromCard;
+window.closeLessonListDrawer = closeLessonListDrawer;
