@@ -1031,3 +1031,128 @@ button, a {
 .join-btn:hover {
   background: #333;
 }
+
+/* Lesson Drawer Styles */
+/* Lesson Drawer Styles */
+#lesson-drawer {
+  position: fixed;
+  top: 0;
+  right: -420px; /* Hidden by default */
+  width: 420px;
+  height: 100%;
+  background: #fff;
+  border-radius: 15px 0 0 15px;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+  transition: right 0.3s ease;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+}
+#lesson-drawer.open {
+  right: 0;
+}
+#lesson-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 1100;
+  display: none;
+}
+
+/* Drawer Header */
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  color: #fff;
+  border-top-left-radius: 15px;
+}
+.drawer-header h3 {
+  margin: 0;
+  font-size: 20px;
+}
+.drawer-header .close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+}
+
+/* Drawer Body */
+.drawer-body {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+.drawer-body .form-group {
+  margin-bottom: 20px;
+}
+.drawer-body label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+}
+.drawer-body input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+/* Custom File Upload */
+.custom-file-upload {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 16px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #f8f8f8;
+  transition: background 0.3s, border-color 0.3s;
+}
+.custom-file-upload:hover {
+  background: #eaeaea;
+  border-color: #ccc;
+}
+.custom-file-upload svg {
+  margin-right: 8px;
+}
+#lesson-upload {
+  display: none;
+}
+.file-name {
+  display: block;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+/* Drawer Footer */
+.drawer-footer {
+  padding: 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.drawer-footer .btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.drawer-footer .btn.cancel-btn {
+  background: #ddd;
+  color: #333;
+}
+.drawer-footer .btn.submit-btn {
+  background: #2575fc;
+  color: #fff;
+}

@@ -576,18 +576,23 @@ teachers.forEach(teacher => {
     sessionDrawer.innerHTML = `
     <div class="drawer-header">
         <h3>Sessions for ${teacher.name}</h3>
-        <button onclick="closeTeacherSessionDrawer('${teacher.id}')">Close</button>
+        <button class="close-btn" onclick="closeTeacherSessionDrawer('${teacher.id}')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
     </div>
     <div class="drawer-body">
         <div class="session-section">
-        <h4>Group Sessions</h4>
-        <div class="session-container group-sessions" id="group-sessions-${teacher.id}">
-        </div>
+            <h4>Group Sessions</h4>
+            <div class="session-container group-sessions" id="group-sessions-${teacher.id}">
+            </div>
         </div>
         <div class="session-section">
-        <h4>One-on-One Sessions</h4>
-        <div class="session-container individual-sessions" id="individual-sessions-${teacher.id}">
-        </div>
+            <h4>One-on-One Sessions</h4>
+            <div class="session-container individual-sessions" id="individual-sessions-${teacher.id}">
+            </div>
         </div>
     </div>
     `;

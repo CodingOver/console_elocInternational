@@ -116,12 +116,13 @@ function createSessionBoxHTML(session) {
     <div class="session-card" style="background: ${backgroundColor};">
         <div class="session-header">
             <div class="session-time">${session.startTime} - ${session.endTime}</div>
-            <button class="session-menu-btn" title="Add new Lesson">
+            <button class="session-menu-btn" onclick="openLessonDrawer()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
             </button>
+
         </div>
         <div class="session-body">
             <h3 class="session-title">${session.title}</h3>
@@ -141,6 +142,7 @@ function createSessionBoxHTML(session) {
     </div>
     `;
 }
+
 
 
 // ------------------------
@@ -174,3 +176,46 @@ function getUpdatedStudentName(studentObj) {
     const updatedStudent = students.find(s => s.id === studentObj.id);
     return updatedStudent ? updatedStudent.name : studentObj.name;
 }
+
+// Add New Lesson Drawer Drawer
+function openLessonDrawer() {
+    document.getElementById("lesson-drawer").classList.add("open");
+    document.getElementById("lesson-overlay").style.display = "block";
+}
+
+function closeLessonDrawer() {
+    document.getElementById("lesson-drawer").classList.remove("open");
+    document.getElementById("lesson-overlay").style.display = "none";
+    // Reset the form fields
+    document.getElementById("lesson-name").value = "";
+    document.getElementById("lesson-upload").value = "";
+    document.getElementById("file-name").textContent = "";
+}
+
+function submitLesson() {
+    const lessonName = document.getElementById("lesson-name").value.trim();
+    const lessonFile = document.getElementById("lesson-upload").files[0];
+
+    if (!lessonName || !lessonFile) {
+    alert("Please provide a lesson name and upload a file.");
+    return;
+    }
+    
+    // TODO: Implement file upload and lesson submission logic.
+    alert(`Lesson "${lessonName}" submitted successfully!`);
+    closeLessonDrawer();
+}
+
+// Update the file input display when a file is chosen.
+document.getElementById("lesson-upload").addEventListener("change", function(){
+    const fileNameSpan = document.getElementById("file-name");
+    if (this.files && this.files.length > 0) {
+    fileNameSpan.textContent = this.files[0].name;
+    } else {
+    fileNameSpan.textContent = "";
+    }
+});
+
+window.openLessonDrawer = openLessonDrawer;
+window.closeLessonDrawer = closeLessonDrawer;
+window.submitLesson = submitLesson;

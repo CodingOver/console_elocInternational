@@ -198,7 +198,7 @@ border-radius: 5px;
 }
 .drawer-header p {
     font-size: 14px;
-    color: #626262;
+    color: #f6f6f6;
 }
 
 .drawer-body {
@@ -511,24 +511,27 @@ right: 0;
 }
 
 .teacher-session-drawer .drawer-header {
-padding: 20px;
-border-bottom: 1px solid #ddd;
-background-color: #f5f3ff;
-display: flex;
-justify-content: space-between;
-align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: #fff;
 }
 
 .teacher-session-drawer .drawer-header h3 {
-font-size: 18px;
-font-weight: 500;
+    margin: 0;
+    font-size: 20px;
 }
 
-.teacher-session-drawer .drawer-header button {
-background: transparent;
-border: none;
-font-size: 16px;
-cursor: pointer;
+.teacher-session-drawer .drawer-header .close-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    padding: 0;
+    line-height: 1;
 }
 
 .teacher-session-drawer .drawer-body {
