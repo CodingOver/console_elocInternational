@@ -116,12 +116,10 @@ function createSessionBoxHTML(session) {
     <div class="session-card" style="background: ${backgroundColor};">
         <div class="session-header">
             <div class="session-time">${session.startTime} - ${session.endTime}</div>
-            <button class="session-menu-btn">
-                <!-- Edit button or similar -->
+            <button class="session-menu-btn" title="Add new Lesson">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="1"></circle>
-                    <circle cx="12" cy="5" r="1"></circle>
-                    <circle cx="12" cy="19" r="1"></circle>
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
             </button>
         </div>
@@ -130,7 +128,8 @@ function createSessionBoxHTML(session) {
             <p class="session-level">${session.level}</p>
             <div class="session-days">${session.days.join(' - ')}</div>
             <div class="session-students">
-                ${session.students && session.students.length 
+                ${
+                    session.students && session.students.length 
                     ? session.students.map(studentObj => `<span class="student-badge">${getUpdatedStudentName(studentObj)}</span>`).join('') 
                     : `<span class="no-students">No students assigned</span>`
                 }
