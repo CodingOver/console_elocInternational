@@ -40,10 +40,10 @@ function initGoogleDrive() {
 // Upload the file to Google Drive and return its URL
 async function uploadFileToGoogleDrive(file) {
     try {
-    // Get the access token using the new GIS method
+    // 1. Get an access token using the new GIS token client
     const accessToken = await initGoogleDrive();
     
-    // Load the gapi client if needed for the Drive API discovery document
+    // 2. Load the gapi client if not already loaded
     if (!gapi.client) {
         await new Promise((resolve, reject) => {
         gapi.load('client', {
@@ -54,15 +54,16 @@ async function uploadFileToGoogleDrive(file) {
         });
         });
     }
-    // Initialize gapi client with your API key and discovery docs if not already done
+    
+    // 3. Initialize gapi client with API key and discovery docs if needed
     if (!gapi.client.drive) {
         await gapi.client.init({
-        apiKey: 'YOUR_API_KEY',
+        apiKey: 'AIzaSyDs5tNHjnNITl4xCvU36j4_qc5uShp1Ct0',
         discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
         });
     }
     
-    // Prepare metadata and file for the multipart upload
+    // 4. Prepare file metadata and form data for the multipart upload
     const metadata = {
         name: file.name,
         mimeType: file.type
@@ -72,8 +73,8 @@ async function uploadFileToGoogleDrive(file) {
     form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
     form.append('file', file);
     
-    // Upload the file to Google Drive
-    const response = await fetch(
+    // 5. Upload the file to Google Drive
+    const uploadResponse = await fetch(
         'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
         {
         method: 'POST',
@@ -83,12 +84,36 @@ async function uploadFileToGoogleDrive(file) {
         body: form
         }
     );
-    const result = await response.json();
-    const fileId = result.id;
+    const uploadResult = await uploadResponse.json();
+    const fileId = uploadResult.id;
+    
+    // 6. Update the file's permission to make it public
+    const permissionResponse = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${fileId}/permissions`,
+        {
+        method: 'POST',
+        headers: new Headers({
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-Type': 'application/json'
+        }),
+        body: JSON.stringify({
+            role: "reader",
+            type: "anyone"
+        })
+        }
+    );
+    
+    if (!permissionResponse.ok) {
+        const errorDetails = await permissionResponse.text();
+        throw new Error("Permission update failed: " + errorDetails);
+    }
+    
+    // 7. Return the public URL for the file
     return `https://drive.google.com/uc?id=${fileId}`;
+    
     } catch (error) {
     console.error("Error uploading file to Google Drive:", error);
-    alert("File upload failed: " + error);
+    alert("File upload failed: " + error.message);
     return null;
     }
 }  

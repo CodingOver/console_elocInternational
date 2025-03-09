@@ -905,7 +905,7 @@ async function openLessonListDrawer(sessionId, sessionTitle) {
     const drawer = createLessonListDrawer();
     const overlay = createLessonListOverlay();
     document.getElementById("lesson-list-title").textContent = `Lessons for: ${sessionTitle}`;
-    // Fetch lessons for this session from Firestore
+    
     try {
     const lessons = await fetchLessonsForSession(sessionId);
     const lessonListBody = document.getElementById("lesson-list-body");
@@ -914,6 +914,14 @@ async function openLessonListDrawer(sessionId, sessionTitle) {
         <div class="lesson-card" style="padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:5px;">
             <h4 style="margin:0 0 5px 0;">${lesson.lessonName}</h4>
             ${lesson.fileUrl ? `<a href="${lesson.fileUrl}" target="_blank">View File</a>` : ''}
+            <div style="margin-top:8px;">
+            <button class="action-btn remove-btn" title="Delete Lesson" onclick="removeLesson('${lesson.id}', '${lesson.sessionId}')">
+                <i class="material-icons">delete</i>
+            </button>
+            <button class="action-btn whatsapp-btn" title="Share via WhatsApp" onclick="shareLessonViaWhatsApp('${lesson.lessonName}', '${lesson.fileUrl}')">
+                <i class="material-icons">share</i>
+            </button>
+            </div>
         </div>
         `).join("");
     } else {
@@ -922,10 +930,11 @@ async function openLessonListDrawer(sessionId, sessionTitle) {
     } catch (error) {
     console.error("Error fetching lessons:", error);
     }
+    
     // Open the drawer and show the overlay
     drawer.style.right = "0";
     overlay.style.display = "block";
-}
+}  
 
 // Close the lesson list drawer and its overlay
 function closeLessonListDrawer() {
@@ -946,3 +955,30 @@ function openLessonListDrawerFromCard(teacherId, sessionId, sessionTitle) {
 }
 window.openLessonListDrawerFromCard = openLessonListDrawerFromCard;
 window.closeLessonListDrawer = closeLessonListDrawer;
+
+// Remove lesson card
+async function removeLesson(lessonId, sessionId) {
+    if (confirm("Are you sure you want to delete this lesson?")) {
+    try {
+        await deleteDoc(doc(db, "lessons", lessonId));
+        alert("Lesson deleted successfully.");
+        // Refresh the lesson list drawer to update the UI.
+        // (Assuming openLessonListDrawer uses sessionId and current session title.)
+        const currentTitle = document.getElementById("lesson-list-title").textContent.replace("Lessons for: ", "");
+        openLessonListDrawer(sessionId, currentTitle);
+    } catch (error) {
+        console.error("Error deleting lesson:", error);
+        alert("Error deleting lesson: " + error.message);
+    }
+    }
+}
+
+// Remove Share Lesson Via Whatssap
+function shareLessonViaWhatsApp(lessonName, lessonUrl) {
+    const message = `Check out this lesson: ${lessonName}\nLink: ${lessonUrl}`;
+    const whatsappURL = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    window.open(whatsappURL, '_blank');
+} 
+
+window.removeLesson = removeLesson;
+window.shareLessonViaWhatsApp = shareLessonViaWhatsApp;
