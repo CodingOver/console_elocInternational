@@ -4,8 +4,94 @@ import { doc, getDoc, setDoc} from "https://www.gstatic.com/firebasejs/9.22.2/fi
 import {signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 // Add these imports:
 import { collection, query, where, getDocs, addDoc} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
+// Initialize the new token client for Google Drive authentication
+function initGoogleDrive() {
+    return new Promise((resolve, reject) => {
+    // If not already initialized, create a token client
+    if (!window.tokenClient) {
+        window.tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: '790508562683-omnujbg6rphc8pm8arf4aci3dtvcl7hh.apps.googleusercontent.com',
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: (response) => {
+            if (response.error) {
+            reject(response.error);
+            } else {
+            resolve(response.access_token);
+            }
+        }
+        });
+    } else {
+        // Reuse the token client
+        window.tokenClient.callback = (response) => {
+        if (response.error) {
+            reject(response.error);
+        } else {
+            resolve(response.access_token);
+        }
+        };
+    }
+    // Request an access token (this may prompt the user)
+    window.tokenClient.requestAccessToken();
+    });
+}
+
+
+// Upload the file to Google Drive and return its URL
+async function uploadFileToGoogleDrive(file) {
+    try {
+    // Get the access token using the new GIS method
+    const accessToken = await initGoogleDrive();
+    
+    // Load the gapi client if needed for the Drive API discovery document
+    if (!gapi.client) {
+        await new Promise((resolve, reject) => {
+        gapi.load('client', {
+            callback: resolve,
+            onerror: () => reject('gapi.client failed to load!'),
+            timeout: 5000,
+            ontimeout: () => reject('gapi.client load timed out!')
+        });
+        });
+    }
+    // Initialize gapi client with your API key and discovery docs if not already done
+    if (!gapi.client.drive) {
+        await gapi.client.init({
+        apiKey: 'YOUR_API_KEY',
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
+        });
+    }
+    
+    // Prepare metadata and file for the multipart upload
+    const metadata = {
+        name: file.name,
+        mimeType: file.type
+    };
+    
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', file);
+    
+    // Upload the file to Google Drive
+    const response = await fetch(
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+        {
+        method: 'POST',
+        headers: new Headers({
+            'Authorization': 'Bearer ' + accessToken
+        }),
+        body: form
+        }
+    );
+    const result = await response.json();
+    const fileId = result.id;
+    return `https://drive.google.com/uc?id=${fileId}`;
+    } catch (error) {
+    console.error("Error uploading file to Google Drive:", error);
+    alert("File upload failed: " + error);
+    return null;
+    }
+}  
 
 // ------------------------
 // DOMContentLoaded: Check Login and Fetch Teacher Data
@@ -232,47 +318,50 @@ async function updateLessonList(sessionId) {
 
 // Submit The Lesson
 async function submitLesson() {
-const lessonName = document.getElementById("lesson-name").value.trim();
-const lessonFile = document.getElementById("lesson-upload").files[0];
+    const lessonName = document.getElementById("lesson-name").value.trim();
+    const lessonFile = document.getElementById("lesson-upload").files[0];
 
-if (!lessonName || !lessonFile) {
+    if (!lessonName || !lessonFile) {
     alert("Please provide a lesson name and upload a file.");
     return;
-}
+    }
 
-// In a real implementation, you’d upload the file (e.g., to Firebase Storage) and get its URL.
-// For now, we simulate with a placeholder:
-const fileUrl = "https://via.placeholder.com/150";
+    // Upload the file to Google Drive
+    const fileUrl = await uploadFileToGoogleDrive(lessonFile);
+    if (!fileUrl) return; // abort if upload fails
 
-// Get the current teacher and session IDs
-const teacherId = sessionStorage.getItem("teacherId");
-if (!window.currentSessionId) {
+    // Capture the file MIME type
+    const fileType = lessonFile.type;
+
+    // Get the current teacher and session IDs
+    const teacherId = sessionStorage.getItem("teacherId");
+    if (!window.currentSessionId) {
     alert("No session selected for adding the lesson.");
     return;
-}
+    }
 
-// Build the lesson object
-const lessonData = {
+    // Build the lesson object (now storing fileUrl and fileType)
+    const lessonData = {
     lessonName: lessonName,
     fileUrl: fileUrl,
+    fileType: fileType,
     teacherId: teacherId,
     sessionId: window.currentSessionId,
     createdAt: new Date().toISOString()
-};
+    };
 
-try {
+    try {
     const docRef = await addDoc(collection(db, "lessons"), lessonData);
     lessonData.id = docRef.id;
     alert(`Lesson "${lessonName}" submitted successfully!`);
     closeLessonDrawer();
-    // After saving, update the lesson list drawer (if it’s open) so the new lesson appears immediately.
+    // Update lesson list drawer if open
     updateLessonList(window.currentSessionId);
     } catch (error) {
     console.error("Error submitting lesson:", error);
     alert("Error submitting lesson: " + error.message);
     }
-}
-
+}  
 
 // Update the file input display when a file is chosen.
 document.getElementById("lesson-upload").addEventListener("change", function(){
@@ -367,27 +456,39 @@ async function openTeacherLessonListDrawer(sessionId, sessionTitle) {
     const drawer = createTeacherLessonListDrawer();
     const overlay = createTeacherLessonListOverlay();
     document.getElementById("teacher-lesson-list-title").textContent = `Lessons for: ${sessionTitle}`;
-    
+
     try {
     const lessons = await fetchLessonsForSession(sessionId);
     const lessonListBody = document.getElementById("teacher-lesson-list-body");
     if (lessons.length > 0) {
-        lessonListBody.innerHTML = lessons.map(lesson => `
-        <div class="lesson-card" style="padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:5px;">
-            <h4 style="margin:0 0 5px 0;">${lesson.lessonName}</h4>
-            ${lesson.fileUrl ? `<a href="${lesson.fileUrl}" target="_blank">View File</a>` : ''}
-        </div>
-        `).join("");
+        lessonListBody.innerHTML = lessons.map(lesson => {
+            let fileDisplay = "";
+            
+            if (lesson.fileType && lesson.fileType.startsWith("image/")) {
+            fileDisplay = `<a href="${lesson.fileUrl}" target="_blank">View Image</a>`;
+            } else if (lesson.fileType === "application/pdf") {
+            fileDisplay = `<a href="${lesson.fileUrl}" target="_blank">View PDF</a>`;
+            } else {
+            fileDisplay = `<a href="${lesson.fileUrl}" target="_blank">View File</a>`;
+            }
+            
+            return `
+            <div class="lesson-card" style="padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:5px;">
+                <h4 style="margin:0 0 5px 0;">${lesson.lessonName}</h4>
+                ${fileDisplay}
+            </div>
+            `;
+        }).join("");
     } else {
         lessonListBody.innerHTML = "<p>No lessons added yet.</p>";
     }
     } catch (error) {
-    console.error("Error fetching lessons:", error);
+    console.error("Error updating lesson list:", error);
     }
     // Slide the drawer in and show the overlay
     drawer.style.right = "0";
     overlay.style.display = "block";
-}
+}  
 
 // Close the lesson list drawer and hide its overlay
 function closeTeacherLessonListDrawer() {
