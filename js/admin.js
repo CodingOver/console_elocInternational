@@ -547,7 +547,7 @@ teachers.forEach(teacher => {
     const dateObj = new Date(teacher.dob);
     const day = dateObj.getDate();
     const month = monthNames[dateObj.getMonth()];
-    const avatarSrc = teacher.gender === "male" ? "https://codingover.github.io/console_elocInternational/img/Avatar_boys.png" : "https://codingover.github.io/console_elocInternational/img/Avatar_girl.png";
+    const avatarSrc = teacher.gender === "male" ? "https://console.elocinternational.com/img/Avatar_boys.png" : "https://console.elocinternational.com/img/Avatar_girl.png";
     const teacherDiv = document.createElement("div");
     teacherDiv.className = "teacher-details";
     teacherDiv.style.position = "relative";
