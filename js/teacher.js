@@ -513,7 +513,7 @@ async function openTeacherLessonListDrawer(sessionId, sessionTitle) {
     // Slide the drawer in and show the overlay
     drawer.style.right = "0";
     overlay.style.display = "block";
-}  
+} 
 
 // Close the lesson list drawer and hide its overlay
 function closeTeacherLessonListDrawer() {

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashaboard - Eloc International</title>
+<link rel="stylesheet" href="../css/teachers.css">
+<link rel="stylesheet" href="../css/admin.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <!-- Admin Login Modal -->
+    <div id="admin-login-modal" class="login-modal">
+        <div class="login-modal-content">
+        <h2>Admin Login</h2>
+        <input type="email" id="admin-email" placeholder="Email"  required>
+        <input type="password" id="admin-password" placeholder="Password" required>
+        <button onclick="adminLogin()">Login</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Start The Header Of The App -->
+        <div class="app-header">
+            <div class="app-header-left">
+            <span class="app-icon"></span>
+            <p class="app-name">Eloc International</p>
+            <div class="search-wrapper">
+                <input class="search-input" type="text" placeholder="Search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
+                <defs></defs>
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="M21 21l-4.35-4.35"></path>
+                </svg>
+            </div>
+            </div>
+            <div class="app-header-right">
+            <button class="mode-switch" title="Switch Theme">
+                <svg class="moon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="24" height="24" viewBox="0 0 24 24">
+                <defs></defs>
+                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                </svg>
+            </button>
+            <button class="add-btn" title="Add New Project">
+                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" /></svg>
+            </button>
+            <button class="notification-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bell">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
+            </button>
+            <button class="profile-btn">
+                <img src="https://assets.codepen.io/3306515/IMG_2025.jpg" />
+                <span>Admin (Malika)</span>
+            </button>
+            </div>
+        </div>
+        <!-- End The Header Of The App -->
+        <!-- Start App Main Content -->
+        <div class="app-content">
+            
+            <!-- Start Left SideBar -->
+            <div class="app-sidebar">
+            <button href="" class="app-sidebar-link active" >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" /></svg>
+            </button>
+            <!-- Add New Teacher Btn -->
+            <button href="" class="app-sidebar-link" title="Add New Teacher" id="openDrawerBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </button>
+            <!-- Add New Student Btn -->
+            <button href="" class="app-sidebar-link" title="Add New Student" id="openStudentDrawerBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-award">
+                    <circle cx="12" cy="8" r="7"></circle>
+                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                </svg>
+            </button>
+            <!-- Add New Session Btn -->
+            <button href="" class="app-sidebar-link" title="Add New Session" onclick="openSessionDrawer()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </button>
+            </div>
+            <!-- End Left SideBar -->
+
+            <!-- Start Project Managements Section -->
+            <div class="projects-section">
+                
+                <div class="projects-section-header">
+                    <p>Dashboard</p>
+                    <!-- <p class="time">February, 28</p> -->
+                </div>
+
+                <div class="projects-section-line">
+                    <div class="dashboard">
+                        <div class="card">
+                            <div class="icon"><span class="material-icons"> apps </span></div>
+                            <div class="title" id="total-students">0</div>
+                            <div class="stat">Total Students</div>
+                        </div>
+                
+                        <div class="card">
+                            <div class="icon"><span class="material-icons"> groups </span></div>
+                            <div class="title" id="total-group">0</div>
+                            <div class="stat" >Group's</div>
+                        </div>
+                
+                        <div class="card">
+                            <div class="icon"><span class="material-icons"> person </span></div>
+                            <div class="title" id='total-individuals'>0</div>
+                            <div class="stat" >Individuals</div>
+                        </div>
+                
+                        <div class="card">
+                            <div class="icon"><span class="material-icons"> task </span></div>
+                            <div class="title" id="total-test-comppleted">0</div>
+                            <div class="stat" >Completed Test</div>
+                        </div>
+                    </div>
+                    
+                    
+                </div>
+                
+                <!--  Our Teacher Ttile -->
+                <div class="projects-section-header">
+                    <p>Our Teacher</p>
+                </div>
+
+                <!-- Start Teacher Section (Dynamic)-->
+                <div class="project-boxes jsGridView" id="teacher-container">
+                    
+                    <!-- Teacher details will be inserted here dynamically -->
+                    <!-- <div class="teacher-details">
+                        <div class="info">
+                            <div class="birth">
+                                <p class="date">20</p>
+                                <span class="month">Mar</span>
+                            </div>
+                            <p class="teacher-name">Manal Zerrouki</p>
+                            <p class="teacher-level">Advanced</p>
+                        </div>
+                        <div class="avatar">
+                            <img src="../img/Avatar_girl.png" alt="">
+                        </div>
+                                                    
+                    </div>
+                    <div class="teacher-details">
+                        <div class="info">
+                            <div class="birth">
+                                <p class="date">18</p>
+                                <span class="month">Sep</span>
+                            </div>
+                            <p class="teacher-name">Mohammed Sibastyan</p>
+                            <p class="teacher-level">Advanced</p>
+                        </div>
+                        <div class="avatar">
+                            <img src="../img/avatar_boys.png" alt="">
+                        </div>                     
+                    </div> -->
+                    
+
+                </div> 
+                
+                <!-- End Teacher Section -->
+                
+                <!--  List Of Students  -->
+                <div class="projects-section-header">
+                    <p>List Of Students</p>
+                </div>
+
+                <!-- Student Table Section -->
+                <div class="student-table-wrapper">
+                    <input type="text" id="student-table-search" placeholder="Search students...">
+                    <table id="student-table">
+                    <thead>
+                        <tr>
+                        <th>Name</th>
+                        <th>DOB</th>
+                        <th>Level</th>
+                        <th>Phone</th>
+                        <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Student rows will be inserted here dynamically -->
+                    </tbody>
+                    </table>
+                </div>  
+
+            </div>
+            <!-- End Project Managements Section -->
+
+        
+            <!-- Start Drawer For Adding New Teacher -->
+            <div class="drawer-overlay" id="overlay"></div>
+            <div class="drawer" id="drawer">
+                <div class="drawer-header">
+                    <h3>New teacher</h3>
+                    <p>Get started by filling in the information below to create a new teacher.</p>
+                </div>
+                <div class="drawer-body">
+                    <div class="form-group">
+                        <label for="name">Full Name Of Teacher</label>
+                        <input type="text" id="name" placeholder="Enter The Teacher's Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" required>
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="dob">Date of Birth</label>
+                        <input type="date" id="dob">
+                    </div>
+                    <div class="form-group">
+                        <label for="level">Teacher Level</label>
+                        <input type="text" id="level" placeholder="Enter The level Of Teacher (Advanced, Intermediate, Beginner ...)">
+                    </div>
+                    <!-- NEW FIELDS -->
+                    <div class="form-group">
+                        <label for="email">Teacher Email</label>
+                        <input type="email" id="email" placeholder="Enter Teacher Email">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="Enter Password">
+                    </div>
+                </div>
+                <div class="drawer-footer">
+                    <button class="btn btn-secondary" onclick="closeDrawer()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveTeacher()">Submit</button>
+                </div>
+            </div>
+            <!-- End Drawer For Adding New Teacher -->
+
+            <!-- Start Drawer For Adding New Student -->
+            <div class="drawer-overlay" id="student-overlay"></div>
+            <div class="drawer" id="student-drawer">
+                <div class="drawer-header">
+                    <h3>New Student</h3>
+                    <p>Get started by filling in the information below to create a new Student.</p>
+                </div>
+                <div class="drawer-body">
+                    <div class="form-group">
+                        <label for="student-name">Full Name Of Student</label>
+                        <input type="text" id="student-name" placeholder="Enter The Teacher's Namw">
+                    </div>
+                    <div class="form-group">
+                        <label for="st-dob">Date of Birth</label>
+                        <input type="date" id="st-dob">
+                    </div>
+                    <div class="form-group">
+                        <label for="student-level">Student Level</label>
+                        <input type="text" id="student-level" placeholder="Enter The level Of Teacher (Advanced, Intermediate, Beginner ...)">
+                    </div>
+                    <div class="form-group">
+                        <label for="student-phone">Number Phone</label>
+                        <input type="number" id="student-phone" placeholder="Type Student Phone Number">
+                    </div>
+                </div>
+                <div class="drawer-footer">
+                    <button class="btn btn-secondary" onclick="closeStudentDrawer()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveStudent()">Submit</button>
+                </div>
+            </div>
+            <!-- End Drawer For Adding New Student -->
+
+            <!-- Start Drawer For Adding New Session -->
+            <div class="drawer-overlay" id="session-overlay" onclick="closeSessionDrawer()"></div>
+            <div class="drawer" id="session-drawer">
+                <div class="drawer-header">
+                    <h3>New Session</h3>
+                    <p>Get started by filling in the information below to create a new Session.</p>
+                </div>
+                <div class="drawer-body">
+                    <div class="form-group">
+                        <label for="session-name">Session Title</label>
+                        <input type="text" id="session-name" placeholder="Enter The Session Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="url">URL</label>
+                        <input type="url" id="url" placeholder="Entre URL Of The Session Ex: (https://meet.google.com/tdg-prad-vsr)">
+                    </div>
+                    <div class="form-group">
+                        <label for="teacher-session">Teacher</label>
+                        <select id="teacher-session" required>
+                            <option value="">Select an owner</option>
+                            <!-- Options will be added dynamically -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="type">Type Of Session</label>
+                        <select id="type" required>
+                            <option value="">Select type Of Session</option>
+                            <option value="group">Group</option>
+                            <option value="individual">Individual</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="session-level">Session Level</label>
+                        <input type="text" id="session-level" placeholder="Enter Session Level (Advanced, Intermediate, Beginner)">
+                    </div>
+                    <div class="form-group">
+                        <label for="student-search">Students</label>
+                        <!-- Search field -->
+                        <input type="text" id="student-search" placeholder="Search students...">
+                        <!-- Container for custom styled checkboxes -->
+                        <!-- Remove all the <label class="checkbox-container"> elements and leave an empty container: -->
+                        <div id="student-checkboxes">
+                            <!-- <label class="checkbox-container">
+                                <input type="checkbox" name="students" value="ayoub">
+                                <span class="checkmark"></span>
+                                Ayoub
+                            </label> -->
+                            
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Live Session Days</label>
+                        <div id="checkbox-days">
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="sessionDays" value="monday">
+                                <span class="checkmark"></span>
+                                Monday
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="sessionDays" value="tuesday">
+                                <span class="checkmark"></span>
+                                Tuesday
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="sessionDays" value="wednesday">
+                                <span class="checkmark"></span>
+                                Wednesday
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="sessionDays" value="thursday">
+                                <span class="checkmark"></span>
+                                Thursday
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="sessionDays" value="friday">
+                                <span class="checkmark"></span>
+                                Friday
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="sessionDays" value="saturday">
+                                <span class="checkmark"></span>
+                                Saturday
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="sessionDays" value="sunday">
+                                <span class="checkmark"></span>
+                                Sunday
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group time-group">
+                        <label for="session-start-time">Session Start Time</label>
+                        <input type="time" id="session-start-time" name="sessionStartTime">
+                    </div>
+                    
+                    <div class="form-group time-group">
+                        <label for="session-end-time">Session End Time</label>
+                        <input type="time" id="session-end-time" name="sessionEndTime">
+                    </div>                      
+                </div>
+                <div class="drawer-footer">
+                    <button class="btn btn-secondary" onclick="closeSessionDrawer()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveSession()">Submit</button>
+                </div>
+            </div>
+            <!-- End Drawer For Adding New Session -->
+        </div>
+    </div>
+
+
+
+    <!-- Teacher Session Overlay -->
+    <div class="teacher-session-overlay" id="teacher-session-overlay" onclick="closeCurrentTeacherSessionDrawer()"></div>
+
+
+    
+
+    <script>
+        document.getElementById("student-search").addEventListener("keyup", function() {
+        var filter = this.value.toLowerCase();
+        var labels = document.querySelectorAll("#student-checkboxes .checkbox-container");
+        labels.forEach(function(label) {
+        var labelText = label.textContent.toLowerCase();
+        label.style.display = labelText.includes(filter) ? "block" : "none";
+        });
+    });
+    </script>
+
+    <script type="module" src="./js/firebase.js"></script>  
+    <script type="module" src="./js/admin.js"></script>
+</body>
+</html>
