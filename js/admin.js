@@ -624,8 +624,8 @@ function createSessionBoxHTML(session, teacherId) {
         <button class="session-menu-btn" onclick="editSessionById('${teacherId}', '${session.id}')">
             <i class="material-icons">edit</i>
         </button>
-        <button class="action-btn delete-btn" onclick="deleteSession('${session.id}', '${teacherId}')">
-            <span class="material-icons">delete</span>
+        <button class="session-menu-btn" onclick="deleteSession('${session.id}', '${teacherId}')">
+            <i class="material-icons">delete</i>
         </button>
         </div>
         <div class="session-body">
@@ -698,6 +698,8 @@ function closeCurrentTeacherSessionDrawer() {
 // Expose it globally so that the inline onclick in admin.html can access it
 window.closeCurrentTeacherSessionDrawer = closeCurrentTeacherSessionDrawer;
 
+
+// EDIT SESSION OF TEACHERS
 function editSessionById(teacherId, sessionId) {
     const teacher = teachers.find(t => t.id == teacherId);
     if (!teacher) {
@@ -744,7 +746,37 @@ function editSessionById(teacherId, sessionId) {
     openSessionDrawer();
 }
 
+// Delete SESSION OF TEACHERS
+async function deleteSession(sessionId, teacherId) {
+    if (!confirm("Are you sure you want to delete this session?")) return;
+
+    const teacherRef = doc(db, "teachers", teacherId);
+    const teacherSnap = await getDoc(teacherRef);
+    if (!teacherSnap.exists()) {
+    alert("Teacher not found");
+    return;
+    }
+
+    const teacherData = teacherSnap.data();
+    const updatedSessions = {
+    group: teacherData.sessions.group.filter(s => s.id !== sessionId),
+    individual: teacherData.sessions.individual.filter(s => s.id !== sessionId),
+    };
+
+    try {
+    await updateDoc(teacherRef, { sessions: updatedSessions });
+    alert("Session deleted successfully.");
+
+    // Refresh the teacher sessions by fetching teachers again
+    fetchTeachers();
+    } catch (error) {
+    console.error("Error deleting session:", error);
+    alert("Failed to delete session.");
+    }
+}  
+
 // Expose the function globally for inline event handlers:
+window.deleteSession = deleteSession;
 window.editSessionById = editSessionById;
 // ------------------------
 // COPY & SHARE FUNCTIONS
