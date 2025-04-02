@@ -624,6 +624,9 @@ function createSessionBoxHTML(session, teacherId) {
         <button class="session-menu-btn" onclick="editSessionById('${teacherId}', '${session.id}')">
             <i class="material-icons">edit</i>
         </button>
+        <button class="action-btn delete-btn" onclick="deleteSession('${session.id}', '${teacherId}')">
+            <span class="material-icons">delete</span>
+        </button>
         </div>
         <div class="session-body">
         <h3 class="session-title">${session.title}</h3>
@@ -703,7 +706,7 @@ function editSessionById(teacherId, sessionId) {
     }
     // Look for the session in both arrays
     let session = teacher.sessions.group.find(s => s.id === sessionId) ||
-                  teacher.sessions.individual.find(s => s.id === sessionId);
+                teacher.sessions.individual.find(s => s.id === sessionId);
     if (!session) {
         alert("Session not found.");
         return;
